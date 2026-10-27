@@ -1,18 +1,18 @@
 
-&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"&gt;
-    &lt;application
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
         android:allowBackup="true"
         android:label="Daily Expenses"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
-        android:supportsRtl="true"&gt;
-        &lt;activity
+        android:supportsRtl="true">
+        <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait"&gt;
-            &lt;intent-filter&gt;
-                &lt;action android:name="android.intent.action.MAIN" /&gt;
-                &lt;category android:name="android.intent.category.LAUNCHER" /&gt;
-            &lt;/intent-filter&gt;
-        &lt;/activity&gt;
-    &lt;/application&gt;
-&lt;/manifest&gt;
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
