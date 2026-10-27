@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily expenses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:inherit}
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EDF2EF;--surface:#FFFFFF;--ink:#10302E;--muted:#4F6A66;--line:#D6E0DB;
+  --track:#E0E9E4;--bar:#2A6B66;--accent:#F0A81C;--over:#C0402A;--field:#F4F7F5;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1A19;--surface:#152826;--ink:#E6F0EC;--muted:#93ABA6;--line:#28403D;
+    --track:#1C312F;--bar:#58A69E;--accent:#F5B83A;--over:#FF8167;--field:#0F1F1E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1A19;--surface:#152826;--ink:#E6F0EC;--muted:#93ABA6;--line:#28403D;
+  --track:#1C312F;--bar:#58A69E;--accent:#F5B83A;--over:#FF8167;--field:#0F1F1E;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--bar);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:12px 18px 28px}
+
+.nav{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px}
+.nav .step{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:22px;line-height:1}
+.nav .step:disabled{opacity:.35;cursor:default}
+.date{text-align:center;font-weight:600}
+.date button{display:block;margin:0 auto;border:0;background:none;padding:0;color:var(--muted);font-size:.85rem;text-decoration:underline}
+
+.hero{padding:22px 4px 4px}
+.total{font-size:clamp(3.2rem,17vw,5.2rem);font-weight:800;line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums;font-variation-settings:"opsz" 96}
+.total.over{color:var(--over)}
+.hero p{margin:8px 0 0;color:var(--muted)}
+.meter{height:8px;border-radius:99px;background:var(--track);margin-top:14px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--bar);border-radius:99px}
+.meter i.over{background:var(--over)}
+@media (prefers-reduced-motion:no-preference){.meter i{transition:width .35s ease}}
+
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:22px 0}
+.day{display:flex;flex-direction:column;gap:6px;align-items:stretch;padding:0;border:0;background:none}
+.track{display:flex;align-items:flex-end;height:76px;border-radius:10px;background:var(--track);overflow:hidden}
+.bar{display:block;width:100%;border-radius:10px;background:var(--bar)}
+.day.on .bar{background:var(--accent)}
+.wd{font-size:.8rem;color:var(--muted);text-align:center}
+.day.on .wd{color:var(--ink);font-weight:800}
+
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:20px 18px}
+.row{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:10px}
+label{display:block;font-size:.85rem;color:var(--muted)}
+input,select{display:block;width:100%;height:46px;margin-top:4px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.add{width:100%;height:48px;border:0;border-radius:14px;background:var(--ink);color:var(--surface);font-weight:700}
+.add:disabled{opacity:.5;cursor:default}
+
+ul{list-style:none;margin:18px 0 0;padding:0}
+li{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+li.empty{display:block;color:var(--muted)}
+.what{overflow-wrap:anywhere}
+.what small{display:block;color:var(--muted)}
+.amt{font-weight:700;font-variant-numeric:tabular-nums}
+.del{width:32px;height:32px;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;border-radius:50%}
+.del:hover{color:var(--over)}
+.actions{display:flex;gap:8px;margin-top:10px}
+.secondary{flex:1;min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--field);font-weight:600;padding:8px}
+.edit{border:1px solid var(--line);background:var(--field);border-radius:10px;padding:6px 9px;color:var(--ink)}
+.backup textarea{width:100%;min-height:110px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--field);color:var(--ink);font:12px/1.4 ui-monospace,monospace}
+.backup button{margin-top:8px}
+
+.month{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.mhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.mhead h2{margin:0;font-size:1.05rem}
+.mhead strong{font-variant-numeric:tabular-nums}
+.cat{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:10px;align-items:center;padding:4px 0;font-size:.9rem}
+.cat .t{height:8px;border-radius:99px;background:var(--track);overflow:hidden}
+.cat .t i{display:block;height:100%;background:var(--bar);border-radius:99px}
+.cat span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
+
+details{margin-top:16px;border-top:1px solid var(--line)}
+summary{padding:14px 0 6px;color:var(--muted);cursor:pointer}
+details .row{padding-bottom:4px}
+.note{margin:14px 4px 0;font-size:.85rem;color:var(--muted)}
+#msg{color:var(--over);min-height:1.2em;margin:10px 0 0}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="nav">
+    <button class="step" id="prev" type="button" aria-label="Previous day">‹</button>
+    <div class="date"><span id="dlabel"></span><button id="todaybtn" type="button" hidden>Jump to today</button></div>
+    <button class="step" id="next" type="button" aria-label="Next day">›</button>
+  </header>
+
+  <section class="hero" aria-live="polite">
+    <div class="total" id="total">0</div>
+    <p id="sub"></p>
+    <div class="meter" id="meter" hidden><i id="fill"></i></div>
+    <p id="bud" hidden></p>
+  </section>
+
+  <div class="week" id="week" role="group" aria-label="Spending over the last 7 days"></div>
+
+  <section class="sheet">
+    <form id="form" autocomplete="off">
+      <div class="row">
+        <label>Amount<input id="amount" inputmode="decimal" placeholder="0.00" required></label>
+        <label>Note<input id="note" maxlength="80" placeholder="Lunch, bus fare…"></label>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Category"></div>
+      <button class="add" id="addbtn" type="submit" disabled>Add expense</button>
+      <button class="secondary" id="cancelEdit" type="button" hidden>Cancel editing</button>
+      <p id="msg" role="status"></p>
+    </form>
+
+    <ul id="list"></ul>
+    <div class="actions">
+      <button class="secondary" id="backupBtn" type="button">Prepare backup</button>
+      <button class="secondary" id="restoreBtn" type="button">Restore backup</button>
+    </div>
+    <div class="backup" id="backupArea" hidden>
+      <label for="backupText">Backup data (copy and save this text somewhere safe)</label>
+      <textarea id="backupText" spellcheck="false"></textarea>
+      <p class="note">To restore, paste a previously saved backup here and tap Restore backup. Restoring replaces the expenses currently on this device.</p>
+    </div>
+
+    <div class="month" id="month" hidden>
+      <div class="mhead"><h2 id="mname"></h2><strong id="mtotal"></strong></div>
+      <div id="cats"></div>
+    </div>
+
+    <details>
+      <summary>Budget and currency</summary>
+      <div class="row">
+        <label>Daily budget<input id="budget" type="number" min="0" step="any" inputmode="decimal" placeholder="None"></label>
+        <label>Currency<select id="currency"></select></label>
+      </div>
+    </details>
+  </section>
+  <p class="note" id="where"></p>
+</main>
+
+<script>
+const CATS=["Food","Transport","Home","Shopping","Fun","Health","Other"];
+const CURRENCIES=["USD","EUR","GBP","INR","JPY","CAD","AUD"];
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const key=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(k,n)=>{const d=parse(k);d.setDate(d.getDate()+n);return key(d)};
+const fmtDate=(k,o)=>parse(k).toLocaleDateString(undefined,o);
+
+let today=key(new Date()),sel=today,cat="Food",editingId=null;
+let expenses=[],settings={currency:"INR",budget:0},store=null;
+
+let nf,nfc;
+function fmt(n){
+  if(nfc!==settings.currency){
+    nfc=settings.currency;
+    try{nf=new Intl.NumberFormat(nfc==="INR"?"en-IN":undefined,{style:"currency",currency:nfc})}
+    catch(e){nf=new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"})}
+  }
+  return nf.format(n);
+}
+function el(tag,props,...kids){
+  const n=document.createElement(tag);
+  for(const k in (props||{})){
+    if(k==="class")n.className=props[k];
+    else if(k.slice(0,2)==="on")n.addEventListener(k.slice(2),props[k]);
+    else n.setAttribute(k,props[k]);
+  }
+  kids.forEach(c=>n.append(c));
+  return n;
+}
+function say(t){$("msg").textContent=t}
+
+/* ---------- storage ---------- */
+function localStore(){
+  const K="daily-expenses-v1";
+  let data={expenses:[],settings:null};
+  try{const raw=localStorage.getItem(K);if(raw)data=JSON.parse(raw)}catch(e){}
+  const save=()=>{
+    try{localStorage.setItem(K,JSON.stringify(data));return true}
+    catch(e){say("Couldn’t save data. Your phone storage may be full.");return false}
+  };
+  expenses=Array.isArray(data.expenses)?data.expenses:[];
+  if(data.settings)settings={...settings,...data.settings};
+  return{
+    add(e){e.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);expenses.push(e);data.expenses=expenses;if(!save())throw new Error("save failed");render()},
+    update(id,patch){expenses=expenses.map(x=>x.id===id?{...x,...patch}:x);data.expenses=expenses;if(!save())throw new Error("save failed");render()},
+    del(id){expenses=expenses.filter(x=>x.id!==id);data.expenses=expenses;if(!save())throw new Error("save failed");render()},
+    replaceAll(list){expenses=list;data.expenses=expenses;if(!save())throw new Error("save failed");render()},
+    saveSettings(s){data.settings=s;if(!save())throw new Error("save failed")}
+  };
+}
+function dbStore(db,uid){
+  const base="data/users/"+uid;
+  const col=db.collection(base+"/ledger/expenses");
+  const sref=db.doc(base+"/ledger");
+  sref.onSnapshot(s=>{
+    if(s.exists){settings={...settings,...s.data()};syncSettings();render()}
+  },()=>{});
+  col.onSnapshot(snap=>{
+    expenses=snap.docs.map(d=>({...d.data(),id:d.id}));
+    render();
+  },()=>say("Couldn’t load your saved expenses. Reload to try again."));
+  return{
+    add:e=>col.add(e),
+    update:(id,patch)=>col.doc(id).update(patch),
+    del:id=>col.doc(id).delete(),
+    replaceAll:()=>Promise.reject(new Error("Restore is available only for local device storage.")),
+    saveSettings:s=>sref.set(s)
+  };
+}
+
+/* ---------- render ---------- */
+function render(){
+  const by={};
+  expenses.forEach(e=>{by[e.date]=(by[e.date]||0)+e.amount});
+  const total=by[sel]||0;
+  const isToday=sel===today;
+
+  $("dlabel").textContent=fmtDate(sel,{weekday:"short",month:"short",day:"numeric"});
+  $("todaybtn").hidden=isToday;
+  $("next").disabled=sel>=today;
+  $("total").textContent=fmt(total);
+  $("sub").textContent=isToday?"Spent today":"Spent on "+fmtDate(sel,{weekday:"long"});
+
+  const b=settings.budget||0;
+  $("meter").hidden=!(b>0);
+  $("bud").hidden=!(b>0);
+  $("total").classList.toggle("over",b>0&&total>b);
+  if(b>0){
+    const over=total>b;
+    $("fill").style.width=Math.min(100,total/b*100)+"%";
+    $("fill").classList.toggle("over",over);
+    $("bud").textContent=over?fmt(total-b)+" over the "+fmt(b)+" budget":fmt(b-total)+" left of "+fmt(b);
+  }
+
+  // last 7 days
+  const days=[];
+  for(let i=6;i>=0;i--){const k=addDays(sel,-i);days.push({k,sum:by[k]||0})}
+  const max=Math.max(1,...days.map(d=>d.sum));
+  $("week").replaceChildren(...days.map(d=>{
+    const bar=el("span",{class:"bar"});
+    bar.style.height=(d.sum?Math.max(6,d.sum/max*100):3)+"%";
+    return el("button",{
+      class:"day"+(d.k===sel?" on":""),type:"button","aria-pressed":d.k===sel,
+      "aria-label":fmtDate(d.k,{weekday:"long",month:"short",day:"numeric"})+": "+fmt(d.sum),
+      onclick:()=>{sel=d.k;render()}
+    },el("span",{class:"track"},bar),el("span",{class:"wd"},fmtDate(d.k,{weekday:"narrow"})));
+  }));
+
+  // entries for the day
+  const items=expenses.filter(e=>e.date===sel).sort((a,c)=>(c.ts||0)-(a.ts||0));
+  $("list").replaceChildren(...(items.length?items.map(e=>{
+    const what=el("div",{class:"what"},e.note||e.cat);
+    if(e.note)what.append(el("small",{},e.cat));
+    return el("li",{},what,el("span",{class:"amt"},fmt(e.amount)),
+      el("button",{class:"edit",type:"button","aria-label":"Edit expense",onclick:()=>startEdit(e)},"Edit"),
+      el("button",{class:"del",type:"button","aria-label":"Delete expense",onclick:()=>{
+        if(!confirm("Delete this expense?"))return;
+        say("");
+        Promise.resolve(store&&store.del(e.id)).catch(()=>say("Couldn’t delete that expense. Try again."));
+      }} ,"×"));
+  }):[el("li",{class:"empty"},"Nothing logged for this day yet. Add an expense above.")]));
+
+  // month summary
+  const ym=sel.slice(0,7);
+  const mItems=expenses.filter(e=>e.date.slice(0,7)===ym);
+  $("month").hidden=!mItems.length;
+  if(mItems.length){
+    const mt=mItems.reduce((a,e)=>a+e.amount,0);
+    const byCat={};
+    mItems.forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+e.amount});
+    $("mname").textContent=fmtDate(sel,{month:"long",year:"numeric"});
+    $("mtotal").textContent=fmt(mt);
+    $("cats").replaceChildren(...Object.entries(byCat).sort((a,c)=>c[1]-a[1]).map(([c,v])=>{
+      const fill=el("i");fill.style.width=(v/mt*100)+"%";
+      return el("div",{class:"cat"},el("span",{},c),el("span",{class:"t"},fill),el("span",{},fmt(v)));
+    }));
+  }
+}
+
+function startEdit(e){
+  editingId=e.id;
+  $("amount").value=String(e.amount);
+  $("note").value=e.note||"";
+  cat=e.cat||"Other";
+  renderChips();
+  $("addbtn").textContent="Save changes";
+  $("cancelEdit").hidden=false;
+  say("Editing expense — update the fields and save.");
+  $("amount").focus();
+}
+function stopEdit(){
+  editingId=null;
+  $("form").reset();
+  cat="Food";
+  renderChips();
+  $("addbtn").textContent="Add expense";
+  $("cancelEdit").hidden=true;
+  say("");
+}
+function prepareBackup(){
+  const payload={format:"daily-expenses-backup",version:1,createdAt:new Date().toISOString(),settings,expenses};
+  $("backupText").value=JSON.stringify(payload,null,2);
+  $("backupArea").hidden=false;
+  $("backupText").focus();
+  $("backupText").select();
+  say("Backup prepared. Copy the text and save it somewhere safe.");
+}
+function restoreBackup(){
+  const area=$("backupArea");
+  area.hidden=false;
+  const raw=$("backupText").value.trim();
+  if(!raw){say("Paste your saved backup text into the box first.");$("backupText").focus();return}
+  if(!store||typeof store.replaceAll!=="function"){say("Restore is not supported by the current storage provider.");return}
+  let payload;
+  try{payload=JSON.parse(raw)}catch(e){say("That backup is not valid JSON.");return}
+  if(!payload||payload.format!=="daily-expenses-backup"||!Array.isArray(payload.expenses)){
+    say("This does not look like a Daily Expenses backup.");return;
+  }
+  const valid=payload.expenses.every(e=>e&&typeof e.date==="string"&&Number.isFinite(Number(e.amount))&&Number(e.amount)>0&&typeof e.cat==="string");
+  if(!valid){say("The backup contains an invalid expense entry.");return}
+  if(!confirm("Restore this backup? Current expenses on this device will be replaced."))return;
+  const list=payload.expenses.map(e=>({id:String(e.id||Date.now().toString(36)+Math.random().toString(36).slice(2,7)),amount:Math.round(Number(e.amount)*100)/100,cat:e.cat,note:String(e.note||"").slice(0,80),date:e.date,ts:Number(e.ts)||Date.now()}));
+  try{
+    store.replaceAll(list);
+    if(payload.settings&&["USD","EUR","GBP","INR","JPY","CAD","AUD"].includes(payload.settings.currency)){
+      settings={currency:payload.settings.currency,budget:Math.max(0,Number(payload.settings.budget)||0)};
+      store.saveSettings(settings);syncSettings();render();
+    }
+    say("Backup restored successfully.");
+  }catch(e){say("Couldn’t restore backup. Try again.")}
+}
+
+function renderChips(){
+  $("chips").replaceChildren(...CATS.map(c=>el("button",{
+    class:"chip",type:"button","aria-pressed":c===cat,
+    onclick:()=>{cat=c;renderChips()}
+  },c)));
+}
+function syncSettings(){
+  $("currency").value=settings.currency;
+  if(document.activeElement!==$("budget"))$("budget").value=settings.budget>0?settings.budget:"";
+}
+
+/* ---------- events ---------- */
+$("prev").onclick=()=>{sel=addDays(sel,-1);render()};
+$("next").onclick=()=>{if(sel<today){sel=addDays(sel,1);render()}};
+$("todaybtn").onclick=()=>{sel=today;render()};
+
+$("form").addEventListener("submit",ev=>{
+  ev.preventDefault();
+  if(!store)return;
+  const raw=$("amount").value.trim().replace(",",".");
+  const amt=Math.round(Number(raw)*100)/100;
+  if(!raw||!Number.isFinite(amt)||!(amt>0)){say("Enter a valid amount greater than 0.");$("amount").focus();return}
+  say("");
+  const e={amount:amt,cat,note:$("note").value.trim().slice(0,80),date:sel,ts:Date.now()};
+  Promise.resolve().then(()=>editingId?store.update(editingId,e):store.add(e)).then(()=>{
+    stopEdit();
+    $("amount").focus();
+  }).catch(()=>say("Couldn’t save that expense. Check storage and try again."));
+});
+$("cancelEdit").onclick=stopEdit;
+$("backupBtn").onclick=prepareBackup;
+$("restoreBtn").onclick=restoreBackup;
+
+function onSettings(){
+  settings={currency:$("currency").value,budget:Math.max(0,parseFloat($("budget").value)||0)};
+  if(store)Promise.resolve(store.saveSettings(settings)).catch(()=>say("Couldn’t save your settings. Check storage and try again."));
+  render();
+}
+$("currency").onchange=onSettings;
+$("budget").onchange=onSettings;
+
+document.addEventListener("visibilitychange",()=>{
+  const t=key(new Date());
+  if(t!==today){if(sel===today)sel=t;today=t;render()}
+});
+
+/* ---------- start ---------- */
+CURRENCIES.forEach(c=>$("currency").append(el("option",{value:c},c)));
+renderChips();
+syncSettings();
+render();
+
+(async function init(){
+  let ready=false;
+  try{
+    if(window.claude&&window.claude.use){
+      const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+      const uid=db&&user?await user.id():null;
+      if(uid){store=dbStore(db,uid);ready=true;$("where").textContent="Saved to your account, so your expenses are here next time you open this page."}
+    }
+  }catch(e){}
+  if(!ready){
+    store=localStore();
+    $("where").textContent="Saved on this device. Make backups regularly; clearing app data or uninstalling may erase expenses.";
+    syncSettings();render();
+  }
+  $("addbtn").disabled=false;
+})();
+</script>
+</body>
+</html>
