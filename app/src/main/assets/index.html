@@ -278,9 +278,8 @@ function render(){
     return el("li",{},what,el("span",{class:"amt"},fmt(e.amount)),
       el("button",{class:"edit",type:"button","aria-label":"Edit expense",onclick:()=>startEdit(e)},"Edit"),
       el("button",{class:"del",type:"button","aria-label":"Delete expense",onclick:()=>{
-        if(!confirm("Delete this expense?"))return;
         say("");
-        Promise.resolve(store&&store.del(e.id)).catch(()=>say("Couldn’t delete that expense. Try again."));
+        Promise.resolve().then(()=>store&&store.del(e.id)).catch(()=>say("Couldn’t delete that expense. Try again."));
       }} ,"×"));
   }):[el("li",{class:"empty"},"Nothing logged for this day yet. Add an expense above.")]));
 
