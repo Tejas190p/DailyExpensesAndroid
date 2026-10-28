@@ -4,7 +4,7 @@
         android:allowBackup="true"
         android:label="Daily Expenses"
         android:icon="@mipmap/ic_launcher"
-        android:theme="@style/Theme.Material.Light.NoActionBar"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:supportsRtl="true">
         <activity
             android:name=".MainActivity"
